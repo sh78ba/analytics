@@ -1,5 +1,6 @@
 package com.analytics.controller;
 
+import com.analytics.kafka.EventProducer;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,21 +16,23 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/events")
 public class EventController {
+    private final EventProducer eventProducer;
     private final EventService eventService;
 
-    public EventController(EventService eventService) {
+    public EventController(EventService eventService, EventProducer eventProducer) {
         this.eventService = eventService;
+        this.eventProducer = eventProducer;
     }
 
     @PostMapping
-    public ApiResponse<Event> createEvent(@Valid @RequestBody EventRequest request) {
+    public ApiResponse<String> createEvent(@Valid @RequestBody EventRequest request) {
         Event event = new Event();
         event.setUserId(request.getUserId());
         event.setEventType(request.getEventType());
         event.setTimestamp(request.getTimeStamp());
 
-        Event saved = eventService.saveEvent(event);
+        eventProducer.sendEvents(event);
 
-        return new ApiResponse<>("Event Created", saved);
+        return new ApiResponse<>("Event sent to Kafka", "SUCCESS");
     }
 }
