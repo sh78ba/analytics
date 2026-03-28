@@ -3,6 +3,11 @@ package com.analytics.service;
 import com.analytics.model.Event;
 import com.analytics.model.Metrics;
 import com.analytics.repository.MetricsRepository;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -35,5 +40,20 @@ public class MetricsService {
                     minuteBucket);
             metricsRepository.save(metric);
         }
+    }
+
+    public List<Metrics> getEventsPerMinute() {
+        return metricsRepository.findByMetricType("EVENTS_PER_MINUTE");
+
+    }
+
+    public Map<String, Long> getSummary() {
+        List<Metrics> metrics = metricsRepository.findByMetricType("EVENTS_PER_MINUTE");
+        Map<String, Long> summary = new HashMap<>();
+
+        for (Metrics m : metrics) {
+            summary.put(m.getKeyName(), summary.getOrDefault(m.getKeyName(), 0L) + m.getValue());
+        }
+        return summary;
     }
 }
