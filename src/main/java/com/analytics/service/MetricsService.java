@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,6 +21,7 @@ public class MetricsService {
         this.metricsRepository = metricsRepository;
     }
 
+    @CacheEvict(value = { "eventsPerMinute", "summary" }, allEntries = true)
     public void processEvent(Event event) {
 
         long minuteBucket = event.getTimestamp() / 60;
@@ -42,11 +45,13 @@ public class MetricsService {
         }
     }
 
+    @Cacheable(value = "eventsPerMinute", key = "'all'")
     public List<Metrics> getEventsPerMinute() {
         return metricsRepository.findByMetricType("EVENTS_PER_MINUTE");
 
     }
 
+    @Cacheable(value = "summary", key = "'all'")
     public Map<String, Long> getSummary() {
         List<Metrics> metrics = metricsRepository.findByMetricType("EVENTS_PER_MINUTE");
         Map<String, Long> summary = new HashMap<>();
